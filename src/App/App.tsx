@@ -1,9 +1,14 @@
-import { AnalysisForm } from "@/features/analysis/AnalysisForm";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import AnalysisPage from "@/pages/AnalysisPage";
 
-export default function App() {
+function App() {
   return (
-    <div>
-      <AnalysisForm />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<AnalysisPage />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
+
+export default App;
