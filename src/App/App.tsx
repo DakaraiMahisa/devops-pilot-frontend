@@ -1,13 +1,10 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import AnalysisPage from "@/pages/AnalysisPage";
+import { AppRoutes } from "../routes/AppRoutes";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<AnalysisPage />} />
-      </Routes>
-    </BrowserRouter>
+    <div className="app-container">
+      <AppRoutes />
+    </div>
   );
 }
 
