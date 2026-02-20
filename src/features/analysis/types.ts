@@ -2,7 +2,7 @@
    Shared Enums
 ============================ */
 
-export type AnalysisStatus = "PENDING" | "PROCESSING" | "COMPLETED" | "FAILED";
+export type AnalysisStatus = "PROCESSING" | "COMPLETED" | "FAILED";
 
 export type ErrorCategory =
   | "BUILD_CONFIGURATION"

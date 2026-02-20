@@ -5,7 +5,8 @@ export function subscribeToAnalysis(
   onMessage: (event: AnalysisStatusEvent) => void,
   onError?: (error: Event) => void,
 ): () => void {
-  const url = `/api/logs/${analysisId}/stream`;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const url = `${API_BASE_URL}/api/logs/${analysisId}/stream`;
 
   const eventSource = new EventSource(url);
 
