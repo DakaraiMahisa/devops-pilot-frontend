@@ -7,6 +7,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  CircularProgress, // Added for a better loading UX
 } from "@mui/material";
 
 interface Props {
@@ -19,7 +20,7 @@ export default function AnalysisForm({ onSubmit, disabled }: Props) {
   const [pipelineType, setPipelineType] = useState("LOG_ANALYSIS");
 
   const handleSubmit = () => {
-    if (!input.trim()) return;
+    if (!input.trim() || disabled) return;
     onSubmit(pipelineType, input);
   };
 
@@ -41,17 +42,30 @@ export default function AnalysisForm({ onSubmit, disabled }: Props) {
       <TextField
         fullWidth
         multiline
-        minRows={6}
+        minRows={10} // Increased rows for better log visibility
         margin="normal"
         value={input}
         disabled={disabled}
         onChange={(e) => setInput(e.target.value)}
         placeholder="Paste logs here..."
+        sx={{
+          "& .MuiInputBase-root": {
+            fontFamily: "monospace",
+            fontSize: "0.875rem",
+          },
+        }}
       />
 
       <Stack direction="row" spacing={2} mt={2}>
-        <Button variant="contained" onClick={handleSubmit} disabled={disabled}>
-          Run Analysis
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={disabled || !input.trim()}
+          startIcon={
+            disabled ? <CircularProgress size={20} color="inherit" /> : null
+          }
+        >
+          {disabled ? "Analyzing..." : "Run Analysis"}
         </Button>
       </Stack>
     </>

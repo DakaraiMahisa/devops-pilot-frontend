@@ -2,6 +2,8 @@ import { useReducer, useCallback, useRef, useEffect } from "react";
 import { createAnalysis, getAnalysis } from "../api/analysis.api";
 import { useAnalysisSse } from "./useAnalysisSse";
 import type { AnalysisStatus, LogAnalysisRecord } from "../types";
+import { useSearchParams } from "react-router-dom";
+import { getAnalysisById } from "../api/analysis.api";
 
 type UiStatus = AnalysisStatus | "IDLE";
 
@@ -17,6 +19,7 @@ type Action =
   | { type: "START_SUCCESS"; id: string }
   | { type: "STATUS_UPDATE"; status: AnalysisStatus }
   | { type: "SET_RESULT"; result: LogAnalysisRecord }
+  | { type: "LOAD_HISTORY"; result: LogAnalysisRecord }
   | { type: "FAIL"; error: string }
   | { type: "RESET" };
 
@@ -49,6 +52,14 @@ function reducer(state: State, action: Action): State {
     case "SET_RESULT":
       return { ...state, status: "COMPLETED", result: action.result };
 
+    case "LOAD_HISTORY":
+      return {
+        ...state,
+        status: "COMPLETED",
+        analysisId: action.result.id,
+        result: action.result,
+        error: null,
+      };
     case "FAIL":
       return { ...state, status: "FAILED", error: action.error };
 
@@ -63,8 +74,32 @@ function reducer(state: State, action: Action): State {
 export function useAnalysis() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
+  const [searchParams] = useSearchParams();
+  const historyId = searchParams.get("id");
+
   const activeIdRef = useRef<string | null>(null);
   const isMountedRef = useRef(true);
+
+  useEffect(() => {
+    if (historyId) {
+      // Avoid refetching if we are already showing this ID
+      if (state.analysisId === historyId) return;
+
+      const fetchHistory = async () => {
+        try {
+          const record = await getAnalysisById(historyId);
+          if (isMountedRef.current) {
+            dispatch({ type: "LOAD_HISTORY", result: record });
+          }
+        } catch (err) {
+          console.error("History fetch failed:", err);
+          dispatch({ type: "FAIL", error: "Could not load report." });
+        }
+      };
+
+      fetchHistory();
+    }
+  }, [historyId, state.analysisId]);
 
   const { connect, disconnect } = useAnalysisSse({
     onStatusUpdate: async (analysisId, status, failureReason) => {
