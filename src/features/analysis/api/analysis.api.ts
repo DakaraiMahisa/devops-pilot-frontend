@@ -19,29 +19,13 @@ export async function createAnalysis(
     "/api/logs/analyze",
     body,
   );
-
   return response.analysisId;
 }
 
 export async function getAnalysis(
   analysisId: string,
 ): Promise<LogAnalysisRecord> {
-  return httpGet<LogAnalysisRecord>(`/api/logs/${analysisId}`);
-}
-export async function submitAnalysis(
-  logText: string,
-  pipelineType: string,
-): Promise<string> {
-  const response = await fetch("http://localhost:8080/api/logs/analyze", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ logText, pipelineType }),
-  });
+  console.log("Fetching data for ID:", analysisId);
 
-  if (!response.ok) {
-    throw new Error("Failed to submit analysis");
-  }
-
-  const data = await response.json();
-  return data.analysisId;
+  return httpGet<LogAnalysisRecord>(`/api/analyses/${analysisId}`);
 }

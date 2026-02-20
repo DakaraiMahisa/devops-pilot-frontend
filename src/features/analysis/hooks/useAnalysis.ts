@@ -32,7 +32,7 @@ function reducer(state: State, action: Action): State {
     case "START_REQUEST":
       return {
         ...state,
-        status: "PENDING",
+        status: "PROCESSING",
         error: null,
         result: null,
       };
@@ -68,43 +68,32 @@ export function useAnalysis() {
 
   const { connect, disconnect } = useAnalysisSse({
     onStatusUpdate: async (analysisId, status, failureReason) => {
-      // Ignore stale events
       if (analysisId !== activeIdRef.current) return;
-
-      dispatch({ type: "STATUS_UPDATE", status });
-
       if (status === "COMPLETED") {
         try {
           const result = await getAnalysis(analysisId);
-
           if (!isMountedRef.current) return;
 
           dispatch({ type: "SET_RESULT", result });
         } catch (err) {
           if (!isMountedRef.current) return;
-
-          dispatch({
-            type: "FAIL",
-            error: err instanceof Error ? err.message : "Unknown error",
-          });
+          console.error("Analysis Error:", err);
+          dispatch({ type: "FAIL", error: "Failed to load results." });
         } finally {
           disconnect();
         }
-      }
-
-      if (status === "FAILED") {
-        dispatch({
-          type: "FAIL",
-          error: failureReason ?? "Analysis failed",
-        });
-
+      } else if (status === "FAILED") {
+        dispatch({ type: "FAIL", error: failureReason ?? "Analysis failed" });
         disconnect();
+      } else {
+        dispatch({ type: "STATUS_UPDATE", status });
       }
     },
   });
 
-  // Ensure cleanup on unmount
+  // cleanup on unmount
   useEffect(() => {
+    isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
       disconnect();
@@ -114,7 +103,7 @@ export function useAnalysis() {
   const startAnalysis = useCallback(
     async (pipelineType: string, logText: string) => {
       // Prevent double start
-      if (state.status === "PENDING" || state.status === "PROCESSING") {
+      if (state.status === "PROCESSING") {
         return;
       }
 
@@ -148,7 +137,7 @@ export function useAnalysis() {
     if (!state.analysisId) return;
 
     activeIdRef.current = state.analysisId;
-    dispatch({ type: "STATUS_UPDATE", status: "PENDING" });
+    dispatch({ type: "STATUS_UPDATE", status: "PROCESSING" });
     connect(state.analysisId);
   }, [connect, state.analysisId]);
 
