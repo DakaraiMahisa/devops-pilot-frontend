@@ -3,8 +3,7 @@ import { StatusIndicator } from "./StatusIndicator";
 import { ResultPanel } from "./ResultPanel";
 import { ErrorBanner } from "./ErrorBanner";
 import AnalysisForm from "./AnalysisForm";
-import { Button } from "@mui/material"; // Consistent with your MUI form
-
+import { Button } from "@mui/material";
 export function AnalysisContainer() {
   const { status, result, error, startAnalysis, cancel, retry, reset } =
     useAnalysis();
