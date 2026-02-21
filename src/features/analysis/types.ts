@@ -62,3 +62,21 @@ export interface AnalysisStatusEvent {
   message: string;
   summary?: string | null;
 }
+export interface CategoryStat {
+  category: string;
+  count: number;
+}
+
+export interface PipelineStat {
+  pipelineType: string;
+  count: number;
+}
+export interface DailyTrendStat {
+  date: string;
+  count: number;
+}
+
+export interface ConfidenceStat {
+  category: string;
+  averageConfidence: number;
+}

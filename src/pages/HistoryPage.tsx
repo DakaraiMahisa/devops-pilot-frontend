@@ -70,10 +70,19 @@ export default function HistoryPage() {
     )
       return;
 
+    // Capture the IDs we are about to delete
+    const idsToRemove = [...selectedIds];
+
     try {
-      await deleteAnalyses(selectedIds);
-      setSelectedIds([]); // Clear selection after delete
-      loadData(); // Refresh current page
+      await deleteAnalyses(idsToRemove);
+
+      setHistory((currentHistory) =>
+        currentHistory.filter((record) => !idsToRemove.includes(record.id)),
+      );
+
+      setSelectedIds([]);
+
+      setTimeout(() => loadData(), 500);
     } catch (error) {
       console.error("Deletion failed:", error);
       alert("Failed to delete records. Please try again.");

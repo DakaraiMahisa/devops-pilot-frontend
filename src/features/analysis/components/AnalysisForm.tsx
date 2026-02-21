@@ -7,7 +7,7 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  CircularProgress, // Added for a better loading UX
+  CircularProgress,
 } from "@mui/material";
 
 interface Props {
@@ -42,7 +42,7 @@ export default function AnalysisForm({ onSubmit, disabled }: Props) {
       <TextField
         fullWidth
         multiline
-        minRows={10} // Increased rows for better log visibility
+        minRows={10}
         margin="normal"
         value={input}
         disabled={disabled}
