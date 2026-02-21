@@ -1,4 +1,3 @@
-// features/analysis/components/Sidebar.tsx
 import { NavLink } from "react-router-dom";
 import { useAnalysisContext } from "../context/useAnalysisContext";
 
@@ -13,14 +12,18 @@ export default function Sidebar() {
 
       <nav className="flex-1 p-4 space-y-2">
         <SidebarLink to="/dashboard" label="Dashboard" icon="📊" />
+
+        {/* NEW: Live Monitor Link */}
+        <SidebarLink to="/monitor" label="Live Monitor" icon="🚀" />
+
         <SidebarLink to="/analysis/new" label="New Analysis" icon="🔍" />
         <SidebarLink to="/history" label="History" icon="📜" />
       </nav>
 
       {/* Real-time Status Indicator in Sidebar */}
       {status === "PROCESSING" && (
-        <div className="mt-auto p-4 mx-4 mb-4 bg-blue-50 border border-blue-100 rounded-lg">
-          <div className="flex items-center text-blue-700 text-xs font-medium">
+        <div className="mt-auto p-4 mx-4 mb-4 bg-blue-900/30 border border-blue-500/30 rounded-lg">
+          <div className="flex items-center text-blue-400 text-xs font-medium">
             <span className="relative flex h-2 w-2 mr-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -32,7 +35,6 @@ export default function Sidebar() {
     </aside>
   );
 }
-
 function SidebarLink({
   to,
   label,
