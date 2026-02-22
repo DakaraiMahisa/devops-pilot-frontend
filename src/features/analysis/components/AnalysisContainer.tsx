@@ -8,8 +8,6 @@ export function AnalysisContainer() {
   const { status, result, error, startAnalysis, cancel, retry, reset } =
     useAnalysis();
 
-  // If we have a result and we aren't currently re-processing,
-  // we are in "Report Mode"
   const isReportMode = status === "COMPLETED" && result;
 
   return (

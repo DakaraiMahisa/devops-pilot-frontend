@@ -39,13 +39,10 @@ export async function getAnalysisHistory(): Promise<LogAnalysisRecord[]> {
     throw new Error("Failed to fetch history");
   }
 
-  // Note: Your Java controller returns a 'Page' object
   const data = await response.json();
 
-  // Spring Data 'Page' puts the list inside a 'content' field
   return data.content || [];
 }
-// src/features/analysis/api/analysis.api.ts
 
 export async function getAnalysisById(id: string): Promise<LogAnalysisRecord> {
   const response = await fetch(
@@ -94,3 +91,13 @@ export async function deleteAnalyses(ids: string[]): Promise<void> {
 
   if (!response.ok) throw new Error("Failed to delete records");
 }
+export const fetchAnalysisById = async (analysisId: string) => {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  const response = await fetch(`${baseUrl}/api/analyses/${analysisId}`);
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch analysis details");
+  }
+
+  return response.json();
+};

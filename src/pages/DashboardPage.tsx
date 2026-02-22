@@ -73,24 +73,23 @@ export default function DashboardPage() {
     );
 
   return (
-    <div className="space-y-8">
-      {/* Header with Time Range Filter */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+    <div className="min-h-screen bg-slate-950 p-6 lg:p-10 space-y-8 text-slate-200">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Analytics Dashboard
           </h1>
-          <p className="text-slate-500">
+          <p className="text-slate-400 mt-1">
             Real-time pipeline failure intelligence.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* NEW: Range Selector Dropdown */}
           <select
             value={range}
             onChange={(e) => setRange(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500 shadow-sm"
+            className="bg-slate-900/50 border border-slate-800 text-white px-4 py-2 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500/50"
           >
             <option value="7">Last 7 Days</option>
             <option value="30">Last 30 Days</option>
@@ -100,16 +99,16 @@ export default function DashboardPage() {
           <button
             onClick={loadDashboardData}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-all shadow-sm active:scale-95"
+            className="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl disabled:opacity-50 transition-all shadow-lg shadow-indigo-900/20"
           >
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? "REFRESHING..." : "REFRESH"}
           </button>
         </div>
       </div>
 
       {/* Failure Volume Trend Chart */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-semibold text-slate-900 mb-6">
+      <div className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-3xl backdrop-blur-md shadow-2xl">
+        <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wider">
           Failure Volume Trend
         </h3>
         <div className="h-80 w-full">
@@ -118,34 +117,41 @@ export default function DashboardPage() {
               <CartesianGrid
                 strokeDasharray="3 3"
                 vertical={false}
-                stroke="#f1f5f9"
+                stroke="#1e293b"
               />
               <XAxis
                 dataKey="date"
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: "#64748b", fontSize: 11 }}
                 dy={10}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{ fill: "#94a3b8", fontSize: 11 }}
+                tick={{ fill: "#64748b", fontSize: 11 }}
               />
               <Tooltip
                 contentStyle={{
-                  borderRadius: "8px",
-                  border: "none",
-                  boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)",
+                  backgroundColor: "#0f172a",
+                  borderRadius: "16px",
+                  border: "1px solid #1e293b",
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.5)",
+                  color: "#f8fafc",
                 }}
               />
               <Line
                 type="monotone"
                 dataKey="count"
                 stroke="#6366f1"
-                strokeWidth={3}
-                dot={{ r: 4, fill: "#6366f1", strokeWidth: 2, stroke: "#fff" }}
-                activeDot={{ r: 6, strokeWidth: 0 }}
+                strokeWidth={4}
+                dot={{
+                  r: 4,
+                  fill: "#6366f1",
+                  strokeWidth: 2,
+                  stroke: "#0f172a",
+                }}
+                activeDot={{ r: 8, strokeWidth: 0, fill: "#818cf8" }}
               />
             </LineChart>
           </ResponsiveContainer>
@@ -154,78 +160,78 @@ export default function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-sm font-medium text-slate-400 uppercase">
-            Total Log Hits
-          </p>
-          <p className="text-3xl font-bold text-slate-900 mt-2">{total}</p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-sm font-medium text-slate-400 uppercase">
-            Top Pipeline
-          </p>
-          <p className="text-3xl font-bold text-blue-600 mt-2">
-            {stats.pipelines[0]?.pipelineType || "N/A"}
-          </p>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <p className="text-sm font-medium text-slate-400 uppercase">
-            Primary Issue
-          </p>
-          <p className="text-xl font-bold text-red-600 mt-2">
-            {primaryIssue
-              ?.replace(/_/g, " ")
-              .toLowerCase()
-              .replace(/\b\w/g, (l) => l.toUpperCase()) || "None"}
-          </p>
-        </div>
+        {[
+          { label: "Total Log Hits", val: total, color: "text-white" },
+          {
+            label: "Top Pipeline",
+            val: stats.pipelines[0]?.pipelineType || "N/A",
+            color: "text-blue-400",
+          },
+          {
+            label: "Primary Issue",
+            val: primaryIssue.replace(/_/g, " "),
+            color: "text-rose-500",
+          },
+        ].map((stat, i) => (
+          <div
+            key={i}
+            className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-3xl backdrop-blur-md shadow-xl"
+          >
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">
+              {stat.label}
+            </p>
+            <p className={`text-3xl font-black mt-2 capitalize ${stat.color}`}>
+              {stat.val}
+            </p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Category Breakdown */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        {/* Error Distribution */}
+        <div className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-3xl backdrop-blur-md">
+          <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wider">
             Error Distribution
           </h3>
-          <div className="space-y-4">
+          <div className="space-y-6">
             {stats.categories.map((item) => (
-              <div key={item.category || Math.random().toString()}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="font-medium text-slate-700">
-                    {item.category?.replace(/_/g, " ") || "Uncategorized"}
+              <div key={item.category}>
+                <div className="flex justify-between text-xs mb-2">
+                  <span className="font-bold text-slate-300 uppercase tracking-widest">
+                    {item.category?.replace(/_/g, " ")}
                   </span>
-                  <span className="text-slate-500">{item.count} logs</span>
+                  <span className="text-indigo-400 font-mono">
+                    {item.count} logs
+                  </span>
                 </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
+                <div className="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-800">
                   <div
-                    className="bg-indigo-500 h-2 rounded-full transition-all duration-500"
+                    className="bg-indigo-500 h-full rounded-full transition-all duration-1000 shadow-[0_0_15px_rgba(99,102,241,0.4)]"
                     style={{
                       width: `${total > 0 ? (item.count / total) * 100 : 0}%`,
                     }}
-                  ></div>
+                  />
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* AI Confidence by Category */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-slate-900 mb-4">
+        {/* AI Confidence */}
+        <div className="bg-slate-900/40 border border-slate-800/60 p-6 rounded-3xl backdrop-blur-md">
+          <h3 className="text-lg font-bold text-white mb-6 uppercase tracking-wider">
             AI Confidence Analysis
           </h3>
           <div className="grid grid-cols-2 gap-4">
             {stats.confidence.map((conf) => (
               <div
                 key={conf.category}
-                className="p-4 bg-slate-50 rounded-xl border border-slate-100"
+                className="p-5 bg-slate-950/50 rounded-2xl border border-slate-800/50 group hover:border-indigo-500/50 transition-colors"
               >
-                <p className="text-xs text-slate-500 uppercase font-semibold mb-1">
+                <p className="text-[10px] text-slate-500 uppercase font-black mb-2 tracking-widest group-hover:text-indigo-400 transition-colors">
                   {conf.category?.replace(/_/g, " ")}
                 </p>
-                <p className="text-2xl font-bold text-slate-800">
+                <p className="text-3xl font-black text-white italic">
                   {(conf.averageConfidence * 100).toFixed(1)}%
                 </p>
               </div>

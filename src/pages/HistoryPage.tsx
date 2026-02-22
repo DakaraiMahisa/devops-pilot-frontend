@@ -6,27 +6,18 @@ import {
 import { AnalysisHistoryTable } from "../features/analysis/components/AnalysisHistoryTable";
 import type { LogAnalysisRecord } from "../features/analysis/types";
 import { useNavigate } from "react-router-dom";
-import {
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack,
-  Button,
-  Pagination,
-} from "@mui/material";
 
 export default function HistoryPage() {
   const [history, setHistory] = useState<LogAnalysisRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalPages, setTotalPages] = useState(0);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]); // Track selected rows
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  // Filter and Pagination State
+  // Filter and Pagination State (Page starts at 0 for Backend sync)
   const [category, setCategory] = useState("");
   const [pipeline, setPipeline] = useState("");
-  const [page, setPage] = useState(1);
+  const [page, setPage] = useState(0);
 
   const loadData = useCallback(async () => {
     setIsLoading(true);
@@ -34,13 +25,14 @@ export default function HistoryPage() {
       const response = await searchHistory({
         errorCategory: category || undefined,
         pipelineType: pipeline || undefined,
-        page: page - 1,
+        page: page, // Use state directly (0-indexed)
         size: 10,
       });
-      setHistory(response.content);
-      setTotalPages(response.totalPages);
+      setHistory(response.content || []);
+      setTotalPages(response.totalPages || 0);
     } catch (error) {
       console.error("Search failed:", error);
+      setHistory([]);
     } finally {
       setIsLoading(false);
     }
@@ -57,143 +49,113 @@ export default function HistoryPage() {
   const handleReset = () => {
     setCategory("");
     setPipeline("");
-    setPage(1);
+    setPage(0);
     setSelectedIds([]);
   };
 
-  // Handle Bulk Delete
   const handleDeleteSelected = async () => {
-    if (
-      !window.confirm(
-        `Are you sure you want to delete ${selectedIds.length} records?`,
-      )
-    )
-      return;
-
-    // Capture the IDs we are about to delete
-    const idsToRemove = [...selectedIds];
-
+    if (!window.confirm(`Delete ${selectedIds.length} records?`)) return;
     try {
-      await deleteAnalyses(idsToRemove);
-
-      setHistory((currentHistory) =>
-        currentHistory.filter((record) => !idsToRemove.includes(record.id)),
-      );
-
+      await deleteAnalyses(selectedIds);
       setSelectedIds([]);
-
-      setTimeout(() => loadData(), 500);
+      loadData();
     } catch (error) {
-      console.error("Deletion failed:", error);
-      alert("Failed to delete records. Please try again.");
+      console.log("Deletion failed", error);
+      alert("Deletion failed.");
     }
   };
 
   return (
-    <div className="space-y-6">
-      <header className="flex justify-between items-end">
+    <div className="min-h-screen bg-slate-950 p-6 lg:p-10 space-y-8 text-slate-200">
+      {/* Header Area */}
+      <header className="flex flex-col xl:flex-row justify-between items-start xl:items-end gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Analysis History
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
-            Review and filter past log reports.
+          <p className="text-slate-400 mt-1">
+            Review and filter past AI log reports.
           </p>
         </div>
 
-        {/* Dynamic Bulk Delete Button */}
-        {selectedIds.length > 0 && (
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleDeleteSelected}
-            className="bg-red-600 hover:bg-red-700 shadow-sm transition-all animate-in fade-in zoom-in duration-200"
-          >
-            Delete Selected ({selectedIds.length})
-          </Button>
-        )}
-      </header>
+        {/* Filters & Actions */}
+        <div className="flex flex-wrap items-center gap-3 w-full xl:w-auto">
+          {selectedIds.length > 0 && (
+            <button
+              onClick={handleDeleteSelected}
+              className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-rose-900/20"
+            >
+              DELETE SELECTED ({selectedIds.length})
+            </button>
+          )}
 
-      <Stack
-        direction={{ xs: "column", sm: "row" }}
-        spacing={2}
-        className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm items-center"
-      >
-        <FormControl size="small" className="min-w-50">
-          <InputLabel>Category</InputLabel>
-          <Select
+          <select
             value={category}
-            label="Category"
             onChange={(e) => {
               setCategory(e.target.value);
-              setPage(1);
-              setSelectedIds([]); // Reset selection on filter change
-            }}
-          >
-            <MenuItem value="">All Categories</MenuItem>
-            <MenuItem value="BUILD_CONFIGURATION">Build Configuration</MenuItem>
-            <MenuItem value="INFRASTRUCTURE">Infrastructure</MenuItem>
-            <MenuItem value="UNKNOWN">Unknown</MenuItem>
-          </Select>
-        </FormControl>
-
-        <FormControl size="small" className="min-w-50">
-          <InputLabel>Pipeline Type</InputLabel>
-          <Select
-            value={pipeline}
-            label="Pipeline Type"
-            onChange={(e) => {
-              setPipeline(e.target.value);
-              setPage(1);
+              setPage(0);
               setSelectedIds([]);
             }}
+            className="bg-slate-900/50 border border-slate-800 text-white px-4 py-2.5 rounded-xl outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
           >
-            <MenuItem value="">All Pipelines</MenuItem>
-            <MenuItem value="LOG_ANALYSIS">Log Analysis</MenuItem>
-            <MenuItem value="BUILD_FAILURE">Build Failure</MenuItem>
-            <MenuItem value="DEPLOYMENT">Deployment</MenuItem>
-          </Select>
-        </FormControl>
+            <option value="">All Categories</option>
+            <option value="BUILD_CONFIGURATION">Build Configuration</option>
+            <option value="INFRASTRUCTURE">Infrastructure</option>
+            <option value="UNKNOWN">Unknown</option>
+          </select>
 
-        <Button
-          variant="text"
-          onClick={handleReset}
-          className="text-slate-500 hover:text-slate-800"
-        >
-          Reset
-        </Button>
-      </Stack>
+          <select
+            value={pipeline}
+            onChange={(e) => {
+              setPipeline(e.target.value);
+              setPage(0);
+              setSelectedIds([]);
+            }}
+            className="bg-slate-900/50 border border-slate-800 text-white px-4 py-2.5 rounded-xl outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/50"
+          >
+            <option value="">All Pipelines</option>
+            <option value="LOG_ANALYSIS">Log Analysis</option>
+            <option value="BUILD_FAILURE">Build Failure</option>
+            <option value="DEPLOYMENT">Deployment</option>
+          </select>
 
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <button
+            onClick={handleReset}
+            className="text-slate-500 hover:text-white text-sm font-medium px-2"
+          >
+            Reset
+          </button>
+        </div>
+      </header>
+
+      {/* Main Table Content */}
+      <div className="relative">
         {isLoading ? (
-          <div className="p-20 text-center animate-pulse text-slate-400">
-            Loading history...
+          <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-32 text-center backdrop-blur-md">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-500 border-r-transparent" />
+            <p className="mt-4 text-slate-400 font-medium">
+              Scanning archives...
+            </p>
           </div>
         ) : history.length > 0 ? (
-          <>
-            <AnalysisHistoryTable
-              records={history}
-              selectedIds={selectedIds}
-              onSelectChange={setSelectedIds}
-              onViewDetails={handleViewDetails}
-            />
-            {totalPages > 1 && (
-              <div className="p-4 border-t border-slate-100 flex justify-center">
-                <Pagination
-                  count={totalPages}
-                  page={page}
-                  onChange={(_, value) => {
-                    setPage(value);
-                    setSelectedIds([]); // Clear selection when changing pages
-                  }}
-                  color="primary"
-                />
-              </div>
-            )}
-          </>
+          <AnalysisHistoryTable
+            records={history}
+            selectedIds={selectedIds}
+            onSelectChange={setSelectedIds}
+            onViewDetails={handleViewDetails}
+            // Sync with Table component
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={(newPage) => {
+              setPage(newPage);
+              setSelectedIds([]);
+            }}
+          />
         ) : (
-          <div className="p-20 text-center text-slate-500">
-            No analyses found for the selected filters.
+          <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-32 text-center backdrop-blur-md">
+            <p className="text-slate-500 text-lg italic">
+              No analysis records found.
+            </p>
           </div>
         )}
       </div>
