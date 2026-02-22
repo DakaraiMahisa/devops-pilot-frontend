@@ -8,10 +8,50 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(51, 65, 85, 0.5); /* slate-700 color */
+  background: rgba(51, 65, 85, 0.5);
   border-radius: 10px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6; /* blue-500 */
+  background: #3b82f6;
+}
+/* globals.css */
+@layer base {
+  .theme-indigo {
+    --brand-primary: 99 102 241;
+    --brand-secondary: 129 140 248;
+    --brand-glow: 99 102 241;
+    --bg-surface: 2 6 23;
+    --border-color: 30 41 59;
+  }
+
+  /* Operations Mode */
+  .theme-emerald {
+    --brand-primary: 16 185 129;
+    --brand-secondary: 45 212 191;
+    --brand-glow: 16 185 129;
+    --bg-surface: 9 9 11;
+    --border-color: 39 39 42;
+  }
+}
+.theme-indigo {
+  --panel-bg: rgba(15, 23, 42, 0.4);
+}
+.theme-emerald {
+  --panel-bg: rgba(9, 9, 11, 0.4);
+}
+/* Smoothly morph SVG chart elements during theme switches */
+.recharts-line-curve,
+.recharts-dot,
+.recharts-active-dot {
+  transition:
+    stroke 0.8s ease-in-out,
+    fill 0.8s ease-in-out !important;
+}
+
+/* Smoothly transition the progress bars */
+.transition-all {
+  transition-property: all;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 700ms;
 }
