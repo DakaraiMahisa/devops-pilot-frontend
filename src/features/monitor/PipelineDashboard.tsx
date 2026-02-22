@@ -9,7 +9,8 @@ import AnalysisModal from "./AnalysisModal";
  * Manages live stream data and handles the display of AI analysis modals.
  */
 const PipelineDashboard: React.FC = () => {
-  const pipelines: PipelineExecution[] = useSse();
+  // FIXED: Destructure the object returned by useSse
+  const { pipelines, loading } = useSse({ includeHistory: false });
 
   // State to track which analysis is active for the modal
   const [selectedAnalysis, setSelectedAnalysis] = useState<
@@ -32,6 +33,7 @@ const PipelineDashboard: React.FC = () => {
         <div className="flex items-center gap-3 bg-slate-900 px-4 py-2 rounded-full border border-slate-800">
           <div
             className={`h-2 w-2 rounded-full ${
+              // Use pipelines from the destructured object
               pipelines.length > 0
                 ? "bg-emerald-500 animate-pulse"
                 : "bg-amber-500"
@@ -59,7 +61,17 @@ const PipelineDashboard: React.FC = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800">
-            {pipelines.length === 0 ? (
+            {loading ? (
+              // Show a loading state while fetching history
+              <tr>
+                <td colSpan={4} className="py-20 text-center text-slate-400">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="h-5 w-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    Initializing monitoring stream...
+                  </div>
+                </td>
+              </tr>
+            ) : pipelines.length === 0 ? (
               <tr>
                 <td
                   colSpan={4}
@@ -73,7 +85,10 @@ const PipelineDashboard: React.FC = () => {
                 <PipelineRow
                   key={p.id}
                   p={p}
-                  onViewFix={(analysis) => setSelectedAnalysis(analysis)}
+                  // TypeScript fix: Explicitly type the parameter to avoid 'any'
+                  onViewFix={(analysis: PipelineExecution["analysis"]) =>
+                    setSelectedAnalysis(analysis)
+                  }
                 />
               ))
             )}
