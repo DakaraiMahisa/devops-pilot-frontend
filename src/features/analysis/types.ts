@@ -80,3 +80,25 @@ export interface ConfidenceStat {
   category: string;
   averageConfidence: number;
 }
+// features/analysis/types.ts
+
+export type TaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "FAILED";
+export type TaskPriority = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
+export interface OrchestrationTask {
+  id: string;
+  taskIdentity: string;
+  requestId: string;
+  collaborator: string;
+  status: TaskStatus;
+  priority: TaskPriority;
+  timeAgo: string;
+  pipelineName?: string;
+}
+
+export interface PulseEvent {
+  type: "SYSTEM" | "EXECUTION" | "USER" | "SUCCESS" | "FAILURE";
+  message: string;
+  detail: string;
+  timestamp: string;
+}
