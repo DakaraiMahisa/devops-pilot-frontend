@@ -7,16 +7,19 @@ import {
   AlertCircle,
   Terminal,
   X,
+  Skull,
 } from "lucide-react";
 import { useOrchestration } from "../analysis/hooks/useOrchestration";
 import { type TaskStatus, type TaskPriority } from "../analysis/types";
 import { LiveConsole } from "./LiveConsole";
 
 export function TaskOrchestrationTable() {
-  const { tasks, loading, handleTriggerFix, logs } = useOrchestration();
-
-  // Sticky state to prevent "flashing" when a task finishes
+  const { tasks, loading, handleTriggerFix, handleForceKill, logs } =
+    useOrchestration();
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+
+  // State for the confirmation popover
+  const [confirmKillId, setConfirmKillId] = useState<string | null>(null);
 
   if (loading) {
     return (
@@ -36,12 +39,13 @@ export function TaskOrchestrationTable() {
   };
 
   const onTriggerFix = (taskId: string) => {
-    setExpandedTaskId(taskId); // Ensure console opens and stays open
+    setExpandedTaskId(taskId);
     handleTriggerFix(taskId);
   };
 
   return (
     <div className="bg-zinc-900/40 border border-zinc-800/60 rounded-3xl overflow-hidden backdrop-blur-md shadow-2xl">
+      {/* Table Header */}
       <div className="px-8 py-6 border-b border-zinc-800/50 flex justify-between items-center">
         <div>
           <h3 className="text-lg font-black text-white tracking-tight uppercase flex items-center gap-2">
@@ -126,52 +130,82 @@ export function TaskOrchestrationTable() {
                       <button
                         onClick={() => toggleConsole(task.id)}
                         className={`p-2 rounded-lg transition-colors ${isConsoleOpen ? "text-emerald-500 bg-emerald-500/10" : "text-zinc-500 hover:bg-zinc-800"}`}
+                        title="Toggle Terminal"
                       >
                         <Terminal size={14} />
                       </button>
 
-                      {task.status === "COMPLETED" ? (
+                      {task.status === "IN_PROGRESS" ? (
+                        <div className="flex items-center gap-2 relative">
+                          {/* Executing Badge */}
+                          <div className="flex items-center gap-2 px-4 py-2 bg-amber-500/10 text-amber-500 border border-amber-500/20 rounded-xl text-[10px] font-black">
+                            <Clock size={12} className="animate-spin" />
+                            EXECUTING...
+                          </div>
+
+                          {/* Kill Button Trigger */}
+                          <button
+                            onClick={() => setConfirmKillId(task.id)}
+                            className="p-2 hover:bg-rose-500/20 text-rose-500 rounded-lg transition-colors border border-transparent hover:border-rose-500/30"
+                            title="Force Terminate"
+                          >
+                            <X size={16} />
+                          </button>
+
+                          {/* Inline Confirmation Popover */}
+                          {confirmKillId === task.id && (
+                            <div className="absolute right-0 top-full mt-2 z-50 bg-zinc-950 border border-rose-500/40 p-3 rounded-xl shadow-2xl animate-in fade-in slide-in-from-top-2 w-48">
+                              <div className="flex items-center gap-2 mb-2 text-rose-500">
+                                <Skull size={12} />
+                                <p className="text-[10px] font-black uppercase tracking-tighter">
+                                  Terminate Process?
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => {
+                                    handleForceKill(task.id);
+                                    setConfirmKillId(null);
+                                  }}
+                                  className="flex-1 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-[9px] font-black rounded-md transition-colors"
+                                >
+                                  CONFIRM
+                                </button>
+                                <button
+                                  onClick={() => setConfirmKillId(null)}
+                                  className="flex-1 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 text-[9px] font-black rounded-md transition-colors"
+                                >
+                                  BACK
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) : task.status === "COMPLETED" ? (
                         <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-xl text-[10px] font-black">
                           <CheckCircle size={12} /> DEPLOYED
                         </div>
                       ) : (
                         <button
                           onClick={() => onTriggerFix(task.id)}
-                          disabled={task.status === "IN_PROGRESS"}
-                          className={`flex items-center gap-2 px-4 py-2 border rounded-xl text-[10px] font-black transition-all 
-                            ${
-                              task.status === "IN_PROGRESS"
-                                ? "bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed"
-                                : "bg-emerald-600/10 hover:bg-emerald-600 text-emerald-500 hover:text-white border-emerald-500/20"
-                            }`}
+                          className="flex items-center gap-2 px-4 py-2 bg-emerald-600/10 hover:bg-emerald-600 text-emerald-500 hover:text-white border-emerald-500/20 rounded-xl text-[10px] font-black transition-all"
                         >
-                          <Play
-                            size={12}
-                            fill="currentColor"
-                            className={
-                              task.status === "IN_PROGRESS"
-                                ? "animate-spin"
-                                : ""
-                            }
-                          />
-                          {task.status === "IN_PROGRESS"
-                            ? "EXECUTING..."
-                            : "TRIGGER FIX"}
+                          <Play size={12} fill="currentColor" />
+                          TRIGGER FIX
                         </button>
                       )}
                     </div>
                   </td>
                 </tr>
 
+                {/* Expanded Console Row */}
                 {isConsoleOpen && (
                   <tr className="bg-black/40 border-x border-emerald-500/10">
                     <td colSpan={5} className="px-8 py-4">
                       <div className="animate-in fade-in zoom-in-95 duration-300 relative">
-                        {/* Use of X import for manual dismissal */}
                         <button
                           onClick={() => setExpandedTaskId(null)}
-                          className="absolute top-2 right-2 p-1 text-zinc-600 hover:text-zinc-400 z-20"
-                          title="Close Console"
+                          className="absolute top-2 right-4 p-1 text-zinc-600 hover:text-zinc-400 z-20"
                         >
                           <X size={16} />
                         </button>
@@ -181,25 +215,30 @@ export function TaskOrchestrationTable() {
                           activeTaskIdentity={task.taskIdentity}
                         />
 
-                        {task.status === "COMPLETED" && (
-                          <div className="mt-2 flex items-center justify-between px-4 py-2 bg-emerald-500/5 rounded-lg border border-emerald-500/10">
-                            <div className="flex items-center gap-2 text-[10px] font-mono text-emerald-500 uppercase">
-                              <CheckCircle size={10} /> Session Finalized
-                            </div>
-                            <button
-                              onClick={() => setExpandedTaskId(null)}
-                              className="text-[9px] font-black text-zinc-500 hover:text-emerald-500 uppercase"
-                            >
-                              Clear Terminal
-                            </button>
+                        <div className="mt-2 flex items-center justify-between px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
+                          <div className="flex items-center gap-2 text-[10px] font-mono uppercase">
+                            {task.status === "COMPLETED" ? (
+                              <span className="text-emerald-500 flex items-center gap-2">
+                                <CheckCircle size={10} /> Session Finalized
+                              </span>
+                            ) : task.status === "FAILED" ? (
+                              <span className="text-rose-500 flex items-center gap-2">
+                                <AlertCircle size={10} /> Execution Halted
+                              </span>
+                            ) : (
+                              <span className="text-amber-500 flex items-center gap-2">
+                                <Clock size={10} className="animate-spin" />{" "}
+                                Receiving Stream...
+                              </span>
+                            )}
                           </div>
-                        )}
-                        {task.status === "FAILED" && (
-                          <div className="mt-2 flex items-center gap-2 px-4 py-2 bg-rose-500/5 text-rose-500 border border-rose-500/10 rounded-lg text-[10px] font-mono uppercase">
-                            <AlertCircle size={10} /> Execution Halted - Check
-                            logs for errors
-                          </div>
-                        )}
+                          <button
+                            onClick={() => setExpandedTaskId(null)}
+                            className="text-[9px] font-black text-zinc-500 hover:text-emerald-500 uppercase transition-colors"
+                          >
+                            Clear Terminal
+                          </button>
+                        </div>
                       </div>
                     </td>
                   </tr>

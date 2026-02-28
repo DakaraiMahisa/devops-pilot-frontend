@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getActiveTasks, triggerFix } from "../api/orchestration.api";
+import { getActiveTasks, triggerFix, stopTask } from "../api/orchestration.api";
 import { type OrchestrationTask, type TaskStatus } from "../types";
 
 export const useOrchestration = () => {
@@ -29,6 +29,8 @@ export const useOrchestration = () => {
             return update;
           }
 
+          // RETAIN COMPLETED TASKS: If task is missing from active list,
+          // but was just running, keep it as COMPLETED so it doesn't vanish.
           if (
             existing.status === "IN_PROGRESS" ||
             executingTasks.current.has(existing.id)
@@ -52,6 +54,19 @@ export const useOrchestration = () => {
     }
   }, []);
 
+  // RE-SYNC LOGIC: If user switches tabs or server restarts, re-fetch the truth.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchTasks();
+    };
+    window.addEventListener("focus", fetchTasks);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      window.removeEventListener("focus", fetchTasks);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchTasks]);
+
   useEffect(() => {
     fetchTasks();
     const API_BASE = import.meta.env.VITE_API_BASE_URL;
@@ -61,7 +76,6 @@ export const useOrchestration = () => {
 
     eventSource.addEventListener("notification", () => {
       setTimeout(() => {
-        // Clear the sticky lock
         executingTasks.current.clear();
         fetchTasks();
       }, 3000);
@@ -86,7 +100,6 @@ export const useOrchestration = () => {
 
   const handleTriggerFix = async (taskId: string) => {
     executingTasks.current.add(taskId);
-
     setLogs((prev) => ({
       ...prev,
       [taskId]: [
@@ -108,11 +121,36 @@ export const useOrchestration = () => {
     }
   };
 
+  const handleForceKill = async (taskId: string) => {
+    try {
+      // Optimistically update state
+      setTasks((prev) =>
+        prev.map((t) => (t.id === taskId ? { ...t, status: "FAILED" } : t)),
+      );
+
+      await stopTask(taskId);
+
+      setLogs((prev) => ({
+        ...prev,
+        [taskId]: [
+          ...(prev[taskId] || []),
+          "🛑 [SYSTEM] Manual termination signal sent.",
+        ],
+      }));
+    } catch (err) {
+      console.error("Failed to kill process", err);
+      fetchTasks();
+    } finally {
+      executingTasks.current.delete(taskId);
+    }
+  };
+
   return {
     tasks,
     loading,
     logs,
     handleTriggerFix,
+    handleForceKill,
     refresh: fetchTasks,
   };
 };
