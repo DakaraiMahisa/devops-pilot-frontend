@@ -1,7 +1,7 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom"; // Added useNavigate
 import { useAnalysisContext } from "../context/useAnalysisContext";
 import { useTheme } from "../context/useTheme";
-import { ModuleSwitcher } from "../../shared/components/ModuleSwitcher"; // Adjust path as necessary
+import { ModuleSwitcher } from "../../shared/components/ModuleSwitcher";
 import {
   LayoutDashboard,
   Activity,
@@ -10,17 +10,29 @@ import {
   ScrollText,
   Cpu,
   Layers,
+  LogOut,
+  User,
 } from "lucide-react";
 
 export default function Sidebar() {
   const { status } = useAnalysisContext();
   const { mode } = useTheme();
+  const navigate = useNavigate();
 
-  // Determine dynamic colors based on theme mode
   const isIndigo = mode === "INTELLIGENCE";
   const themeColorClass = isIndigo ? "text-indigo-500" : "text-emerald-500";
   const themeBorderClass = isIndigo ? "border-slate-800" : "border-zinc-800";
   const themeBgClass = isIndigo ? "bg-slate-900" : "bg-zinc-950";
+
+  // Logout Handshake
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("pilotName");
+    navigate("/login", { replace: true });
+  };
+
+  const pilotName = localStorage.getItem("pilotName") || "Unknown Operator";
 
   return (
     <aside
@@ -40,7 +52,7 @@ export default function Sidebar() {
         </span>
       </div>
 
-      {/* 2. Global Module Switcher (The Slide Toggle) */}
+      {/* 2. Global Module Switcher */}
       <ModuleSwitcher />
 
       {/* 3. Navigation Links */}
@@ -78,7 +90,7 @@ export default function Sidebar() {
         />
         <SidebarLink
           to="/history"
-          label="Analysis Archive"
+          label="Archive"
           icon={<ScrollText size={18} />}
           mode={mode}
         />
@@ -97,7 +109,7 @@ export default function Sidebar() {
       {/* 4. Real-time Status Indicator */}
       {status === "PROCESSING" && (
         <div
-          className={`mt-auto p-4 mx-4 mb-4 rounded-2xl border transition-all duration-500 ${
+          className={`mx-4 mb-2 p-4 rounded-2xl border transition-all duration-500 ${
             isIndigo
               ? "bg-indigo-500/5 border-indigo-500/20 text-indigo-400"
               : "bg-emerald-500/5 border-emerald-500/20 text-emerald-400"
@@ -106,23 +118,55 @@ export default function Sidebar() {
           <div className="flex items-center text-[11px] font-black uppercase tracking-tight">
             <span className="relative flex h-2 w-2 mr-3">
               <span
-                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-                  isIndigo ? "bg-indigo-400" : "bg-emerald-400"
-                }`}
+                className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isIndigo ? "bg-indigo-400" : "bg-emerald-400"}`}
               ></span>
               <span
-                className={`relative inline-flex rounded-full h-2 w-2 ${
-                  isIndigo ? "bg-indigo-500" : "bg-emerald-500"
-                }`}
+                className={`relative inline-flex rounded-full h-2 w-2 ${isIndigo ? "bg-indigo-500" : "bg-emerald-500"}`}
               ></span>
             </span>
             Neural Analysis Active
           </div>
         </div>
       )}
+
+      {/* 5. User Profile & Termination (NEW) */}
+      <div className={`p-4 mt-auto border-t ${themeBorderClass} bg-black/20`}>
+        <div className="flex items-center gap-3 px-2 mb-4">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center border ${
+              isIndigo
+                ? "bg-indigo-500/10 border-indigo-500/30"
+                : "bg-emerald-500/10 border-emerald-500/30"
+            }`}
+          >
+            <User size={14} className={themeColorClass} />
+          </div>
+          <div className="flex flex-col min-w-0">
+            <span className="text-[10px] font-black uppercase tracking-tighter text-slate-500">
+              Active Pilot
+            </span>
+            <span className="text-xs font-bold truncate">{pilotName}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 p-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/5 transition-all group"
+        >
+          <LogOut
+            size={16}
+            className="group-hover:-translate-x-1 transition-transform"
+          />
+          <span className="text-[10px] font-black uppercase tracking-widest">
+            Terminate Session
+          </span>
+        </button>
+      </div>
     </aside>
   );
 }
+
+// SidebarLink remains the same as your provided version
 
 function SidebarLink({
   to,

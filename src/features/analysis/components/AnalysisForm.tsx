@@ -24,18 +24,16 @@ export default function AnalysisForm({ onSubmit, disabled }: Props) {
     onSubmit(pipelineType, input);
   };
 
-  // Shared styles for the "Glass" input look
   const inputStyle = {
-    backgroundColor: "rgba(15, 23, 42, 0.6)", // slate-950/60
-    borderRadius: "12px",
+    backgroundColor: "rgba(15, 23, 42, 0.6)",
     "& .MuiOutlinedInput-notchedOutline": {
-      borderColor: "rgba(51, 65, 85, 0.5)", // slate-700/50
+      borderColor: "rgba(51, 65, 85, 0.5)",
     },
     "&:hover .MuiOutlinedInput-notchedOutline": {
-      borderColor: "rgba(99, 102, 241, 0.5)", // indigo-500/50
+      borderColor: "rgba(99, 102, 241, 0.5)",
     },
     "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-      borderColor: "#6366f1", // indigo-500
+      borderColor: "#6366f1",
     },
     "& .MuiInputBase-input": {
       color: "#f8fafc", // slate-50
