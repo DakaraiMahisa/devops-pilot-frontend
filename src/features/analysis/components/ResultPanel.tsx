@@ -37,8 +37,6 @@ export function ResultPanel({ result }: Props) {
     try {
       setIsPromoting(true);
 
-      // 1. Await the actual API call.
-      // The browser stays here until the server sends '200 OK' and commits to Mongo.
       await promoteToOps(result.id);
 
       // 2. Clear initial loading and show the Handshake Overlay
@@ -48,9 +46,6 @@ export function ResultPanel({ result }: Props) {
       // 3. Update Global UI Context
       setMode("OPERATIONS");
 
-      // 4. THE GRACEFUL HANDOVER:
-      // We wait 1.5s to let the backend finish its 'stream.complete()' logic
-      // and let the user digest the transition.
       setTimeout(() => {
         navigate("/orchestration");
       }, 1500);

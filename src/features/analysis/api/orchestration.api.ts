@@ -17,3 +17,8 @@ export const triggerFix = async (taskId: string) => {
   const response = await axios.post(`${API_BASE}/${taskId}/execute`);
   return response.data;
 };
+
+export const stopTask = async (taskId: string) => {
+  const response = await axios.post(`${API_BASE}/${taskId}/stop`);
+  return response.data;
+};
